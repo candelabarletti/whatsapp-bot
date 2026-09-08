@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "dev": "node --watch server.js",
-    "start": "node server.js",
+    "postinstall": "prisma generate",
+    "start": "prisma migrate deploy && node server.js",
     "tenant:create": "node scripts/create-tenant.js",
     "tenant:list": "node scripts/list-tenants.js"
   },
