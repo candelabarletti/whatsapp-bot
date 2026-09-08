@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Un negocio-cliente que te contrata. Cada uno conecta su propio número de
+// WhatsApp y/o cuenta de Instagram a TU app de Meta (un solo webhook para todos).
+model Tenant {
+  id     String @id @default(cuid())
+  name   String
+
+  // Contexto que se le inyecta a Claude como system prompt: info del negocio,
+  // tono, horarios, FAQs, qué puede y no puede prometer, etc.
+  systemPrompt String
+
+  // Credenciales de WhatsApp Cloud API de este negocio (nulas si no lo usa).
+  whatsappPhoneNumberId String? @unique
+  whatsappAccessToken   String?
+
+  // Credenciales de Instagram Messaging API de este negocio (nulas si no lo usa).
+  instagramAccountId   String? @unique
+  instagramAccessToken String?
+
+  // Dónde avisarle al dueño del negocio cuando el bot escala a un humano.
+  // (MVP: se loguea; más adelante se usa para mandar email/whatsapp/slack)
+  handoffContact String?
+
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  conversations Conversation[]
+}
+
+// Una conversación = un contacto final (cliente del negocio) en un canal.
+model Conversation {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  channel           String // "whatsapp" | "instagram"
+  externalContactId String // número de WhatsApp o instagram-scoped id del usuario final
+
+  // Si needsHuman/paused están en true, el bot deja de responder automático
+  // en esta conversación hasta que alguien del negocio la retome.
+  needsHuman Boolean @default(false)
+  paused     Boolean @default(false)
+
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([tenantId, channel, externalContactId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  role    String // "user" | "assistant"
+  content String
+
+  createdAt DateTime @default(now())
+}

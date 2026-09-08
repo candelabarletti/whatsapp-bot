@@ -1,0 +1,21 @@
+{
+  "name": "whatsapp-instagram-bot",
+  "version": "1.0.0",
+  "description": "Webhook server que conecta WhatsApp Cloud API e Instagram Messaging API con la API de Claude",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "tenant:create": "node scripts/create-tenant.js",
+    "tenant:list": "node scripts/list-tenants.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.123.0",
+    "@prisma/client": "^6.19.3",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "prisma": "^6.19.3"
+  }
+}
